@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(files("libs/TarsosDSP-Android-2.4.jar"))
+    implementation("androidx.navigation:navigation-compose:2.7.7") // Or the latest version
     implementation("com.google.accompanist:accompanist-permissions:0.31.5-beta")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

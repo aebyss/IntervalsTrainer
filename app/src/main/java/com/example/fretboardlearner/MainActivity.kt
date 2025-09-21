@@ -5,11 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,15 +13,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.fretboardlearner.ui.screen.FretboardTrainerScreen
+import com.example.fretboardlearner.ui.screen.SplashScreen
 import com.example.fretboardlearner.ui.theme.FretboardLearnerTheme
+import com.example.fretboardlearner.ui.viewmodel.AudioInputViewModel
 import com.example.fretboardlearner.ui.viewmodel.FretboardTrainerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
-import com.example.fretboardlearner.ui.viewmodel.AudioInputViewModel
 
 class MainActivity : ComponentActivity() {
+    // The ViewModels are still created here, as they are shared across the app.
     private val fretboardTrainerViewModel: FretboardTrainerViewModel by viewModels()
     private val audioInputViewModel: AudioInputViewModel by viewModels()
 
@@ -33,13 +35,54 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             FretboardLearnerTheme {
+                // The permission handler now wraps our entire navigation system.
                 AudioPermissionHandler {
-                    FretboardTrainerScreen(
-                        fretboardViewModel = fretboardTrainerViewModel,
-                        audioViewModel = audioInputViewModel
+                    // This function now contains our navigation logic
+                    AppNavigationHost(
+                        fretboardTrainerViewModel = fretboardTrainerViewModel,
+                        audioInputViewModel = audioInputViewModel
                     )
                 }
             }
+        }
+    }
+}
+
+// --- NEW: This composable manages the entire navigation graph of the app ---
+@Composable
+fun AppNavigationHost(
+    fretboardTrainerViewModel: FretboardTrainerViewModel,
+    audioInputViewModel: AudioInputViewModel
+) {
+    // Create a NavController to manage screen transitions.
+    val navController = rememberNavController()
+
+    // NavHost is the container for all of your app's screens.
+    NavHost(
+        navController = navController,
+        // The "startDestination" is the first screen that will be shown.
+        startDestination = "splash_screen"
+    ) {
+        // Define the splash screen
+        composable("splash_screen") {
+            SplashScreen(
+                onTimeout = {
+                    // When the splash screen's timer finishes, navigate to the main screen.
+                    // popUpTo removes the splash screen from the back stack, so the user
+                    // can't press the back button to go back to it.
+                    navController.navigate("main_screen") {
+                        popUpTo("splash_screen") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Define the main game screen
+        composable("main_screen") {
+            FretboardTrainerScreen(
+                fretboardViewModel = fretboardTrainerViewModel,
+                audioViewModel = audioInputViewModel
+            )
         }
     }
 }
